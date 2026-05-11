@@ -254,11 +254,15 @@ pub fn pacman_install(
         .map(|n| n.split('/').last().unwrap_or(n).to_string())
         .collect();
 
-    let mut args: Vec<String> = vec!["pacman".into(), "-S".into()];
+    let mut args: Vec<String> = vec!["-S".into(), "--needed".into()];
     args.extend(pure);
 
     let args_ref: Vec<&str> = args.iter().map(|x| x.as_str()).collect();
-    execute_external_command(terminal, "sudo", &args_ref)?;
+    execute_external_command(terminal, "sudo", {
+        let mut full_args = vec!["pacman"];
+        full_args.extend(args_ref);
+        full_args
+    }.as_slice())?;
 
     Ok(())
 }

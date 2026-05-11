@@ -34,12 +34,20 @@ pub fn execute_external_command(
     execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
     execute!(terminal.backend_mut(), Show)?;
 
-    println!("\nExecuting: {} {}\n", cmd, args.join(" "));
+    println!("\n{}", "=".repeat(40));
+    println!(" RUNNING: {} {}", cmd, args.join(" "));
+    println!("{}\n", "=".repeat(40));
+
     let status = std::process::Command::new(cmd).args(args).status();
-    println!(
-        "\nCommand finished: {:?}\nPress Enter to continue...",
-        status
-    );
+
+    println!("\n{}", "=".repeat(40));
+    match status {
+        Ok(s) if s.success() => println!(" STATUS: Success"),
+        Ok(s) => println!(" STATUS: Failed ({:?})", s),
+        Err(e) => println!(" ERROR: {}", e),
+    }
+    println!("{}", "=".repeat(40));
+    println!("\nPress Enter to return to trx...");
 
     let mut input = String::new();
     io::stdin().read_line(&mut input)?;
