@@ -39,6 +39,8 @@ pub struct App {
     pub show_help: bool,
     result_tx: Sender<Vec<Package>>,
     result_rx: Receiver<Vec<Package>>,
+    details_tx: Sender<Option<std::collections::HashMap<String, String>>>,
+    details_rx: Receiver<Option<std::collections::HashMap<String, String>>>,
     last_input_time: Instant,
     pending_search: bool,
     last_search_query: String,
@@ -48,6 +50,8 @@ impl App {
     pub fn new(result_tx: Sender<Vec<Package>>, result_rx: Receiver<Vec<Package>>) -> Self {
         let mut list_state = ListState::default();
         list_state.select(None);
+
+        let (details_tx, details_rx) = std::sync::mpsc::channel();
 
         Self {
             input: String::new(),
@@ -68,6 +72,8 @@ impl App {
             show_help: false,
             result_tx,
             result_rx,
+            details_tx,
+            details_rx,
             last_input_time: Instant::now(),
             pending_search: false,
             last_search_query: String::new(),
@@ -241,12 +247,33 @@ impl App {
             .collect();
     }
 
+    fn trigger_details_fetch(&mut self) {
+        if self.packages.is_empty() || self.selected >= self.packages.len() {
+            return;
+        }
+
+        if self.selected == self.last_selected {
+            return;
+        }
+
+        let pkg = self.packages[self.selected].clone();
+        let tx = self.details_tx.clone();
+        self.last_selected = self.selected;
+        self.details = None; // clear current details to show loading
+
+        thread::spawn(move || {
+            let info = managers::details_package(&pkg.name, &pkg.provider);
+            let _ = tx.send(info);
+        });
+    }
+
     pub fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         loop {
             if let Tab::Search = self.current_tab {
                 self.check_and_execute_search();
             }
 
+            // check search results
             if let Ok(pkgs) = self.result_rx.try_recv() {
                 if let Tab::Search = self.current_tab {
                     self.packages = pkgs;
@@ -258,12 +285,15 @@ impl App {
                         .collect();
 
                     self.selected = 0;
+                    self.last_selected = usize::MAX; // Reset to trigger details for first item
                     self.loading = false;
 
                     if !self.packages.is_empty() {
                         self.list_state.select(Some(0));
+                        self.trigger_details_fetch();
                     } else {
                         self.list_state.select(None);
+                        self.details = None;
                     }
 
                     self.messages = self
@@ -274,13 +304,22 @@ impl App {
                 }
             }
 
+            // check details results
+            if let Ok(details) = self.details_rx.try_recv() {
+                self.details = details;
+            }
+
             terminal.draw(|frame| draw_ui(frame, &mut self))?;
 
-            if event::poll(std::time::Duration::from_millis(100))? {
+            if event::poll(std::time::Duration::from_millis(10))? {
                 if let Event::Key(key) = event::read()? {
                     match self.input_mode {
                         InputMode::Normal if key.kind == KeyEventKind::Press => match key.code {
-                            KeyCode::Tab => self.switch_tab(),
+                            KeyCode::Tab => {
+                                self.switch_tab();
+                                self.last_selected = usize::MAX;
+                                self.trigger_details_fetch();
+                            }
                             KeyCode::Char('i') => {
                                 let _ = self.run_command(terminal);
                                 // Refresh installed status after install
@@ -309,12 +348,14 @@ impl App {
                                 if self.selected > 0 {
                                     self.selected -= 1;
                                     self.list_state.select(Some(self.selected));
+                                    self.trigger_details_fetch();
                                 }
                             }
                             KeyCode::Down | KeyCode::Char('j') => {
                                 if self.selected + 1 < self.packages.len() {
                                     self.selected += 1;
                                     self.list_state.select(Some(self.selected));
+                                    self.trigger_details_fetch();
                                 }
                             }
                             _ => {}

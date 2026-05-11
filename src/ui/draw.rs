@@ -9,8 +9,6 @@ use ratatui::{
 use crate::ui::{app::App, input::InputMode};
 use textwrap::wrap;
 
-use crate::managers::details_package;
-
 fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::vertical([
         Constraint::Percentage((100 - percent_y) / 2),
@@ -183,13 +181,6 @@ pub fn draw_ui(frame: &mut Frame, app: &mut App) {
     if app.packages.is_empty() {
         details_lines.push(Line::from("No package selected"));
     } else {
-        if app.selected != app.last_selected {
-            let pkg_name = &app.packages[app.selected].name;
-            let provider = &app.packages[app.selected].provider;
-            app.details = details_package(pkg_name, provider);
-            app.last_selected = app.selected;
-        }
-
         if let Some(ref info) = app.details {
             let mut sorted: Vec<_> = info.iter().collect();
             sorted.sort_by_key(|(k, _)| *k);
