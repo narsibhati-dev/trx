@@ -18,12 +18,12 @@ fn normalize_aur_value(v: &serde_json::Value) -> String {
     }
 }
 
-pub fn search_aur(search_word: &str) -> Vec<Package> {
+pub fn search_aur(search_word: &str, aur_helper: &str) -> Vec<Package> {
     if search_word.trim().is_empty() {
         return Vec::new();
     }
 
-    let output = Command::new("yay").args(&["-Ss", search_word]).output();
+    let output = Command::new(aur_helper).args(&["-Ss", search_word]).output();
 
     match output {
         Ok(output) if output.status.success() => {
@@ -82,6 +82,7 @@ pub fn aur_details(pkg: &str) -> Option<HashMap<String, String>> {
 pub fn aur_install(
     terminal: &mut DefaultTerminal,
     selected: &HashSet<String>,
+    aur_helper: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if selected.is_empty() {
         return Ok(());
@@ -92,7 +93,7 @@ pub fn aur_install(
         .map(|n| n.split('/').last().unwrap_or(n).to_string())
         .collect();
 
-    let mut args: Vec<String> = vec!["yay".into(), "-S".into()];
+    let mut args: Vec<String> = vec![aur_helper.into(), "-S".into()];
     args.extend(pure);
 
     let args_ref: Vec<&str> = args.iter().map(|x| x.as_str()).collect();

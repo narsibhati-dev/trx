@@ -262,3 +262,80 @@ pub fn pacman_install(
 
     Ok(())
 }
+
+pub fn get_installed_packages() -> HashSet<String> {
+    let output = std::process::Command::new("pacman")
+        .arg("-Q")
+        .output()
+        .ok();
+
+    if let Some(output) = output {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        stdout
+            .lines()
+            .filter_map(|line| line.split_whitespace().next().map(|s| s.to_string()))
+            .collect()
+    } else {
+        HashSet::new()
+    }
+}
+
+pub fn get_installed_packages_details() -> Vec<Package> {
+    let output = std::process::Command::new("pacman")
+        .arg("-Q")
+        .output()
+        .ok();
+
+    if let Some(output) = output {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        stdout
+            .lines()
+            .filter_map(|line| {
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 2 {
+                    Some(Package {
+                        provider: "pacman/local".to_string(),
+                        name: parts[0].to_string(),
+                        version: parts[1].to_string(),
+                        description: "".to_string(), // we don't have desc in -Q
+                        score: 1.0,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    }
+}
+
+pub fn get_updates() -> Vec<Package> {
+    let output = std::process::Command::new("checkupdates")
+        .output()
+        .ok();
+
+    if let Some(output) = output {
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        stdout
+            .lines()
+            .filter_map(|line| {
+                // format: pkgname oldver -> newver
+                let parts: Vec<&str> = line.split_whitespace().collect();
+                if parts.len() >= 4 {
+                    Some(Package {
+                        provider: "pacman/update".to_string(),
+                        name: parts[0].to_string(),
+                        version: format!("{} -> {}", parts[1], parts[3]),
+                        description: "".to_string(),
+                        score: 1.0,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect()
+    } else {
+        Vec::new()
+    }
+}

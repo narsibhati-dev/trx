@@ -13,19 +13,30 @@ use std::time::{Duration, Instant};
 
 use crate::managers::{self, Package};
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Tab {
+    Search,
+    Installed,
+    Updates,
+}
+
 pub struct App {
     pub input: String,
     pub character_index: usize,
     pub input_mode: InputMode,
+    pub current_tab: Tab,
     pub packages: Vec<Package>,
     pub checked: Vec<bool>,
     pub selected_names: HashSet<String>,
+    pub installed_packages: HashSet<String>,
     pub selected: usize,
     pub list_state: ListState,
     pub messages: Vec<String>,
     pub loading: bool,
     pub details: Option<std::collections::HashMap<String, String>>,
     pub last_selected: usize,
+    pub config: crate::config::Config,
+    pub show_help: bool,
     result_tx: Sender<Vec<Package>>,
     result_rx: Receiver<Vec<Package>>,
     last_input_time: Instant,
@@ -41,16 +52,20 @@ impl App {
         Self {
             input: String::new(),
             input_mode: InputMode::Normal,
+            current_tab: Tab::Search,
             messages: Vec::new(),
             character_index: 0,
             packages: Vec::new(),
             checked: Vec::new(),
             selected_names: HashSet::new(),
+            installed_packages: managers::pacman::get_installed_packages(),
             selected: 0,
             list_state,
             loading: false,
             details: None,
             last_selected: usize::MAX,
+            config: crate::config::Config::load(),
+            show_help: false,
             result_tx,
             result_rx,
             last_input_time: Instant::now(),
@@ -104,7 +119,7 @@ impl App {
     }
 
     fn check_and_execute_search(&mut self) {
-        const DEBOUNCE_MS: u64 = 100;
+        const DEBOUNCE_MS: u64 = 50;
 
         if self.pending_search
             && self.last_input_time.elapsed() >= Duration::from_millis(DEBOUNCE_MS)
@@ -117,6 +132,7 @@ impl App {
                 self.loading = true;
 
                 let tx = self.result_tx.clone();
+                let aur_helper = self.config.aur_helper.clone();
 
                 thread::spawn(move || {
                     // spawn pacman search
@@ -127,7 +143,7 @@ impl App {
 
                     let aur_handle = thread::spawn({
                         let q = query.clone();
-                        move || managers::yay::search_aur(&q)
+                        move || managers::yay::search_aur(&q, &aur_helper)
                     });
 
                     // get pacman results
@@ -184,39 +200,78 @@ impl App {
         }
 
         if !aur_pkgs.is_empty() {
-            managers::yay::aur_install(terminal, &aur_pkgs)?;
+            managers::yay::aur_install(terminal, &aur_pkgs, &self.config.aur_helper)?;
         }
 
         Ok(())
     }
 
+    fn switch_tab(&mut self) {
+        self.current_tab = match self.current_tab {
+            Tab::Search => Tab::Installed,
+            Tab::Installed => Tab::Updates,
+            Tab::Updates => Tab::Search,
+        };
+
+        match self.current_tab {
+            Tab::Search => {
+                self.packages.clear();
+                self.pending_search = true;
+            }
+            Tab::Installed => {
+                self.loading = true;
+                self.packages = managers::pacman::get_installed_packages_details();
+                self.loading = false;
+                self.selected = 0;
+                self.list_state.select(Some(0));
+            }
+            Tab::Updates => {
+                self.loading = true;
+                self.packages = managers::pacman::get_updates();
+                self.loading = false;
+                self.selected = 0;
+                self.list_state.select(Some(0));
+            }
+        }
+
+        self.checked = self
+            .packages
+            .iter()
+            .map(|p| self.selected_names.contains(&p.name))
+            .collect();
+    }
+
     pub fn run(mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         loop {
-            self.check_and_execute_search();
+            if let Tab::Search = self.current_tab {
+                self.check_and_execute_search();
+            }
 
             if let Ok(pkgs) = self.result_rx.try_recv() {
-                self.packages = pkgs;
+                if let Tab::Search = self.current_tab {
+                    self.packages = pkgs;
 
-                self.checked = self
-                    .packages
-                    .iter()
-                    .map(|p| self.selected_names.contains(&p.name))
-                    .collect();
+                    self.checked = self
+                        .packages
+                        .iter()
+                        .map(|p| self.selected_names.contains(&p.name))
+                        .collect();
 
-                self.selected = 0;
-                self.loading = false;
+                    self.selected = 0;
+                    self.loading = false;
 
-                if !self.packages.is_empty() {
-                    self.list_state.select(Some(0));
-                } else {
-                    self.list_state.select(None);
+                    if !self.packages.is_empty() {
+                        self.list_state.select(Some(0));
+                    } else {
+                        self.list_state.select(None);
+                    }
+
+                    self.messages = self
+                        .packages
+                        .iter()
+                        .map(|p| format!("{} {:<15} {}", p.name, p.version, p.description))
+                        .collect();
                 }
-
-                self.messages = self
-                    .packages
-                    .iter()
-                    .map(|p| format!("{} {:<15} {}", p.name, p.version, p.description))
-                    .collect();
             }
 
             terminal.draw(|frame| draw_ui(frame, &mut self))?;
@@ -225,8 +280,11 @@ impl App {
                 if let Event::Key(key) = event::read()? {
                     match self.input_mode {
                         InputMode::Normal if key.kind == KeyEventKind::Press => match key.code {
+                            KeyCode::Tab => self.switch_tab(),
                             KeyCode::Char('i') => {
                                 let _ = self.run_command(terminal);
+                                // Refresh installed status after install
+                                self.installed_packages = managers::pacman::get_installed_packages();
                             }
                             KeyCode::Char(' ') => {
                                 if !self.packages.is_empty() {
@@ -245,6 +303,7 @@ impl App {
                             }
                             KeyCode::Char('e') => self.input_mode = InputMode::Editing,
                             KeyCode::Char('q') => return Ok(()),
+                            KeyCode::Char('?') => self.show_help = !self.show_help,
 
                             KeyCode::Up | KeyCode::Char('k') => {
                                 if self.selected > 0 {
