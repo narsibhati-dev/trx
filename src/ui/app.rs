@@ -47,8 +47,8 @@ pub struct App {
     pub config: crate::config::Config,
     pub show_help: bool,
     pub manager: Arc<Box<dyn managers::PackageManager>>,
-    result_tx: Sender<Vec<Package>>,
-    result_rx: Receiver<Vec<Package>>,
+    result_tx: Sender<(String, Vec<Package>)>,
+    result_rx: Receiver<(String, Vec<Package>)>,
     details_tx: Sender<DetailsState>,
     details_rx: Receiver<DetailsState>,
     last_input_time: Instant,
@@ -57,7 +57,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(result_tx: Sender<Vec<Package>>, result_rx: Receiver<Vec<Package>>) -> Self {
+    pub fn new(result_tx: Sender<(String, Vec<Package>)>, result_rx: Receiver<(String, Vec<Package>)>) -> Self {
         let mut list_state = ListState::default();
         list_state.select(None);
 
@@ -152,10 +152,11 @@ impl App {
 
                 let tx = self.result_tx.clone();
                 let manager = self.manager.clone();
+                let q_clone = query.clone();
 
                 thread::spawn(move || {
-                    let all = manager.search(&query);
-                    let _ = tx.send(all);
+                    let all = manager.search(&q_clone);
+                    let _ = tx.send((q_clone, all));
                 });
             } else if query.is_empty() {
                 self.pending_search = false;
@@ -205,32 +206,34 @@ impl App {
             Tab::Updates => Tab::Search,
         };
 
+        self.packages.clear();
+        self.selected = 0;
+        self.list_state.select(None);
+        self.details_state = DetailsState::Empty;
+
         match self.current_tab {
             Tab::Search => {
-                self.packages.clear();
                 self.pending_search = true;
             }
             Tab::Installed => {
                 self.loading = true;
-                self.packages = self.manager.get_installed_details();
-                self.loading = false;
-                self.selected = 0;
-                self.list_state.select(Some(0));
+                let tx = self.result_tx.clone();
+                let manager = self.manager.clone();
+                thread::spawn(move || {
+                    let pkgs = manager.get_installed_details();
+                    let _ = tx.send(("__INSTALLED__".to_string(), pkgs));
+                });
             }
             Tab::Updates => {
                 self.loading = true;
-                self.packages = self.manager.get_updates();
-                self.loading = false;
-                self.selected = 0;
-                self.list_state.select(Some(0));
+                let tx = self.result_tx.clone();
+                let manager = self.manager.clone();
+                thread::spawn(move || {
+                    let pkgs = manager.get_updates();
+                    let _ = tx.send(("__UPDATES__".to_string(), pkgs));
+                });
             }
         }
-
-        self.checked = self
-            .packages
-            .iter()
-            .map(|p| self.selected_names.contains(&p.name))
-            .collect();
     }
 
     fn trigger_details_fetch(&mut self) {
@@ -266,8 +269,14 @@ impl App {
             }
 
             // check search results
-            if let Ok(pkgs) = self.result_rx.try_recv() {
-                if let Tab::Search = self.current_tab {
+            while let Ok((q, pkgs)) = self.result_rx.try_recv() {
+                let is_current_tab_result = match self.current_tab {
+                    Tab::Search => q == self.input.trim(),
+                    Tab::Installed => q == "__INSTALLED__",
+                    Tab::Updates => q == "__UPDATES__",
+                };
+
+                if is_current_tab_result {
                     self.packages = pkgs;
 
                     self.checked = self
