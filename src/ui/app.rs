@@ -205,6 +205,9 @@ impl App {
         };
 
         self.packages.clear();
+        self.messages.clear();
+        self.checked.clear();
+        self.last_search_query.clear();
         self.selected = 0;
         self.list_state.select(None);
         self.details_state = DetailsState::Empty;
