@@ -1,11 +1,12 @@
 [package]
 name = "trx-cli"
-version = "0.1.2"
+version = "0.1.4"
 edition = "2024"
 description = "A Modern Cross-Platform Package Manager TUI"
 license = "MIT"
 repository = "https://github.com/pie-314/trx"
 homepage = "https://github.com/pie-314/trx"
+exclude = ["trx-web/**", "target/**", "assets/**"]
 
 [[bin]]
 name = "trx"
