@@ -1,5 +1,5 @@
 /**
- * Skeuomorphic landing chrome — Tailwind class fragments (join with spaces).
+ * Skeuomorphic landing chrome: Tailwind class fragments (join with spaces).
  * Matches dark skeuomorphic skill: top-lit raised shells, inset cavities, popping CTAs.
  */
 
@@ -13,7 +13,7 @@ export const RAISED_BORDER = "border border-white/5";
 export const RAISED_SHADOW =
   "shadow-[0_1px_0.5px_#ffffff1a_inset,0_1px_1px_#ffffff35_inset,0_10px_10px_-9px_#00000070,0_20px_20px_-14px_#00000060,0_0px_6px_0px_#00000060]";
 
-/** Crisp raised — use sparingly (hero terminal frame) */
+/** Crisp raised; use sparingly (hero terminal frame) */
 export const RAISED_CRISP_SHADOW =
   "shadow-[0_0.5px_0px_#ffffff1a_inset,0_1px_0.5px_#ffffff25_inset,0_10px_10px_-9px_#00000070,0_20px_20px_-14px_#00000060,0_0px_6px_0px_#00000060]";
 
@@ -60,7 +60,7 @@ export function raisedTopBar(extra?: string) {
     .join(" ");
 }
 
-/** Primary CTA — same gradient as shells, stronger shadow */
+/** Primary CTA: same gradient as shells, stronger shadow */
 export function poppingBtn(extra?: string) {
   return [
     "inline-flex items-center justify-center gap-2 rounded-lg font-semibold",

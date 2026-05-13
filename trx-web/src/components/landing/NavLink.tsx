@@ -1,11 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { onSamePageHashLinkClick } from "./smooth-hash-nav";
 
 export function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
+  const pathname = usePathname();
   return (
     <Link
       href={href}
+      onClick={(e) => onSamePageHashLinkClick(e, href, pathname)}
       className={[
         "rounded-md px-1 py-0.5 text-sm font-medium text-[#878787] outline-none transition-colors",
         "hover:text-[#ebebeb]",

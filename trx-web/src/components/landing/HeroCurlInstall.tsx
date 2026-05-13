@@ -28,7 +28,7 @@ export function HeroCurlInstall() {
         className="text-[12px] font-medium leading-snug text-[#878787] [font-family:var(--font-geist-sans)]"
         style={{ letterSpacing: "-0.01em" }}
       >
-        Quick install — paste in your terminal:
+        Quick install: paste in your terminal:
       </p>
       <div className={insetWell("inline-flex w-full items-center gap-2 rounded-lg py-1 pl-3 pr-1.5 font-mono text-[12px] text-[#c4c4c4]")}>
         <div className="min-w-0 flex-1 overflow-hidden truncate whitespace-nowrap pr-0.5">

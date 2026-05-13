@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
-import { raisedGhostBtn } from "@/app/landing-material";
 import { IconGithub } from "./icons";
 import { NavLink } from "./NavLink";
+import { onSamePageHashLinkClick } from "./smooth-hash-nav";
 import { TrxLogo } from "./TrxLogo";
 
 export function LandingHeader() {
+  const pathname = usePathname();
+  const installHref = "/#install";
   return (
     <header className="fixed inset-x-0 top-0 z-[100] bg-transparent">
       <div className="mx-auto box-border max-w-[1280px] px-4 pb-2 pt-2.5 sm:px-10">
@@ -36,21 +39,31 @@ export function LandingHeader() {
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-2.5">
-            <div className="rounded-lg bg-[#0d0d0d] px-1 py-px shadow-[0_0.5px_0_#ffffff50,0_2px_6px_#00000090_inset]">
-              <a
-                href="https://github.com/pie-314/trx"
-                target="_blank"
-                rel="noopener noreferrer"
-                className={"no-underline gap-1.5 px-2.5 py-1.5 text-sm flex justify-center items-center"}
-              >
-                <IconGithub size={13} /> GitHub
-              </a>
-            </div>
+            <motion.div whileTap={{ scale: 0.97 }} className="inline-block">
+              <div className="rounded-lg bg-[#0d0d0d] p-px shadow-[0_0.5px_0_#ffffff50,0_2px_6px_#00000090_inset]">
+                <a
+                  href="https://github.com/pie-314/trx"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={[
+                    "inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-sm leading-none no-underline outline-none transition-colors",
+                    "text-[#878787] hover:text-[#ebebeb]",
+                    "focus-visible:ring-2 focus-visible:ring-[#555fbb]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d]",
+                    "[font-family:var(--font-geist-sans)]",
+                  ].join(" ")}
+                >
+                  <IconGithub className="shrink-0" size={13} />
+                  GitHub
+                </a>
+              </div>
+            </motion.div>
 
             <motion.div whileTap={{ scale: 0.97 }} className="inline-block">
               <Link
-                href="/#install"
+                href={installHref}
+                onClick={(e) => onSamePageHashLinkClick(e, installHref, pathname)}
                 className={[
+                  "inline-flex items-center justify-center",
                   "rounded-lg border border-white/[0.06]",
                   "bg-gradient-to-b from-[#202020] to-[#191919]",
                   "px-3.5 py-1.5 text-sm font-semibold text-[#ebebeb] no-underline outline-none transition-transform",
@@ -66,6 +79,6 @@ export function LandingHeader() {
           </div>
         </div>
       </div>
-    </header >
+    </header>
   );
 }

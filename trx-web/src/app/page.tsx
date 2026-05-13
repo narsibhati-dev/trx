@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
 import { insetWell, raisedGhostBtn, raisedPanel, SCENE } from "./landing-material";
 import { C, SECTION_PAD_X, SECTION_PAD_Y } from "@/components/landing/tokens";
@@ -17,8 +18,11 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { PlatformBadge } from "@/components/landing/PlatformBadge";
 import { Step } from "@/components/landing/Step";
 import { StepFlowConnector } from "@/components/landing/StepFlowConnector";
+import { onSamePageHashLinkClick } from "@/components/landing/smooth-hash-nav";
 
 export default function Home() {
+  const pathname = usePathname();
+  const installHref = "/#install";
   return (
     <div className={`${SCENE} min-h-screen overflow-x-hidden text-[#ebebeb]`}>
       <LandingHeader />
@@ -50,7 +54,8 @@ export default function Home() {
               <div className="flex flex-wrap items-center gap-2">
                 <div className="inline-flex rounded-lg bg-[#0d0d0d] p-px shadow-[0_0.5px_0_#ffffff50,0_2px_6px_#00000090_inset]">
                   <Link
-                    href="/#install"
+                    href={installHref}
+                    onClick={(e) => onSamePageHashLinkClick(e, installHref, pathname)}
                     className="inline-flex h-8 items-center justify-center rounded-[7px] px-3 text-sm font-medium leading-none text-[#878787] no-underline outline-none transition-colors hover:text-[#ebebeb] focus-visible:ring-2 focus-visible:ring-[#555fbb]/45 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d0d0d] [font-family:var(--font-geist-sans)]"
                   >
                     Get started
