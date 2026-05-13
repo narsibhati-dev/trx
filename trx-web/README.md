@@ -22,16 +22,25 @@ Built with Next.js 16 · React 19 · Tailwind CSS 4 · TypeScript
 
 ## Preview
 
-<!-- Drop a screenshot or screen recording of the landing page here -->
+<div align="center">
 
-> **To add a screenshot:**
-> 1. Save the image to `../assets/web-preview.png`
-> 2. Replace this block with: `![Landing page](../assets/web-preview.png)`
->
-> **To embed a video:**
-> ```html
-> <video src="../assets/web-demo.mp4" controls width="720" />
-> ```
+![Landing page — hero, quick install, and TUI mockup](../assets/web-preview.png)
+
+</div>
+
+**On the page:** tagline *“The package manager for the terminal generation.”*, value props (fast keyboard-driven cross-platform search, 50k+ packages, pure Rust), quick install via curl, and a three-panel terminal-style demo (search / installed / updates, managers such as pacman, AUR, brew).
+
+**Quick install** (same as the site):
+
+```bash
+curl -fsSL https://trx.pidev.tech/install.sh | sh
+```
+
+**To embed a video** in this README later, add something like:
+
+```html
+<video src="../assets/web-demo.mp4" controls width="720" />
+```
 
 ---
 
@@ -41,7 +50,9 @@ Built with Next.js 16 · React 19 · Tailwind CSS 4 · TypeScript
 
 **What the site covers:**
 
-- Hero section with an animated live-demo terminal mockup (3-panel TUI layout)
+- Hero with headline, CTAs (Get started, View source), and status line (“Written in pure Rust — no async runtime.”)
+- Quick install strip with copy-to-clipboard for the install script URL
+- Animated live-demo terminal mockup (3-panel TUI: package list, detail pane, managers)
 - Feature overview: fuzzy search, multi-manager, batch operations, zero overhead
 - Step-by-step install guide with keyboard shortcut reference
 - Platform support badges: macOS, Arch Linux, Debian/Ubuntu
@@ -102,6 +113,7 @@ Shared project assets (logo, screenshots, demo gif) live in [`../assets/`](../as
 | File | Description |
 |------|-------------|
 | `assets/logo.svg` | TRX logo (icon + wordmark, light on transparent) |
+| `assets/web-preview.png` | Landing page screenshot (hero + install + mockup) |
 | `assets/trx-preview.gif` | Terminal demo recording |
 
 ---
