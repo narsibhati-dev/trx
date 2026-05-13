@@ -48,7 +48,14 @@ No daemon. No config file. Just run `trx`.
 
 ## Installation
 
+### One-liner (Recommended)
+
+```bash
+curl -fsSL https://trx.pidev.tech/install.sh | sh
+```
+
 ### From source
+...
 
 ```bash
 git clone https://github.com/pie-314/trx.git
@@ -150,7 +157,7 @@ Search, list loads, and detail fetches all run on **OS threads** communicating v
 - [ ] Dependency graph visualizer
 - [ ] Metadata caching for faster repeated searches
 - [ ] Plugin system for custom backends and widgets
-- [ ] Binary releases via GitHub Actions
+- [x] Binary releases via GitHub Actions
 
 ---
 

@@ -38,11 +38,14 @@ Ensure the project builds without warnings before opening a pull request.
 
 ```
 src/
-├── main.rs          # Application entry point
-├── app.rs           # Global state + reducer
+├── main.rs          # Application entry point & terminal setup
+├── config.rs        # Configuration management
 ├── ui/              # Terminal UI components
-├── managers/        # Package manager backends
-└── fuzzy/           # Fuzzy matching engine
+│   ├── app.rs       # App state & event loop
+│   ├── draw.rs      # Rendering logic
+│   └── input.rs     # Input handling & debouncing
+├── managers/        # Package manager backends (apt, brew, pacman, etc.)
+└── fuzzy/           # Scoring-based fuzzy matching engine
 ```
 
 ---
@@ -83,8 +86,8 @@ Improve README, examples, architecture docs, or this file.
 
 * Keep the codebase clean and idiomatic.
 * Prefer pure functions in UI components.
-* Avoid blocking I/O on the main/UI thread.
-* Use `tokio` for all asynchronous operations.
+* Avoid blocking the UI thread with heavy I/O.
+* Use **OS threads** and **mpsc channels** for background tasks (no async runtime).
 * Return structured errors using `ManagerError`.
 
 ### **Style**
