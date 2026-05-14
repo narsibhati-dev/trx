@@ -132,7 +132,7 @@ export default function Home() {
             <StaggerInView className="flex flex-col gap-6 sm:flex-row sm:items-end sm:gap-8 lg:gap-12">
               <motion.div variants={itemVariants} className="flex-1 min-w-0"><Step num="01" title="Install TRX" code="cargo install trx-cli" /></motion.div>
               <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4, delay: 0.15 } } }} className="hidden sm:flex"><StepFlowConnector phase={0} /></motion.div>
-              <motion.div variants={itemVariants} className="flex-1 min-w-0"><Step num="02" title="Launch" code="trx-cli" /></motion.div>
+              <motion.div variants={itemVariants} className="flex-1 min-w-0"><Step num="02" title="Launch" code="trx" /></motion.div>
               <motion.div variants={{ hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.4, delay: 0.3 } } }} className="hidden sm:flex"><StepFlowConnector phase={1} /></motion.div>
               <motion.div variants={itemVariants} className="flex-1 min-w-0"><Step num="03" title="Search and install" code="e, type, space, i" /></motion.div>
             </StaggerInView>
@@ -143,18 +143,18 @@ export default function Home() {
       {/* ── PLATFORMS ────────────────────────────────────────────────────────── */}
       <section id="platforms" style={{ position: "relative", zIndex: 1 }}>
         <Container className="py-12 sm:py-16 lg:py-20">
-          <FadeUp className="mb-8 flex flex-wrap items-end justify-between gap-6">
-            <div>
-              <Label>Platforms</Label>
+          <FadeUp style={{ marginBottom: "32px" }}>
+            <Label>Platforms</Label>
+            <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-14">
               <h2 style={{ fontSize: "clamp(26px, 3vw, 38px)", fontWeight: "700", letterSpacing: "-0.03em", fontFamily: "var(--font-geist-sans)", lineHeight: "1.15", color: C.text, margin: 0 }}>
                 Works everywhere<br />you work.
               </h2>
+              <p style={{ color: C.text2, fontSize: "14px", fontFamily: "var(--font-geist-sans)", maxWidth: "280px", lineHeight: "1.65", margin: 0, flexShrink: 0 }}>
+                Package manager auto-detected at launch. Zero configuration. Just run <code style={{ fontFamily: "var(--font-geist-mono)", color: C.text3 }}>trx-cli</code>.
+              </p>
             </div>
-            <p style={{ color: C.text2, fontSize: "14px", fontFamily: "var(--font-geist-sans)", maxWidth: "280px", lineHeight: "1.65", margin: 0 }}>
-              Package manager auto-detected at launch. Zero configuration. Just run <code style={{ fontFamily: "var(--font-geist-mono)", color: C.text3 }}>trx-cli</code>.
-            </p>
           </FadeUp>
-          <StaggerInView style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: "12px", marginBottom: "20px" }}>
+          <StaggerInView style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "12px" }}>
             <motion.div variants={itemVariants}><PlatformBadge icon={<IconApple />} name="macOS" manager="via Homebrew (brew)" /></motion.div>
             <motion.div variants={itemVariants}><PlatformBadge icon={<IconArch />} name="Arch Linux" manager="via Pacman + AUR (yay)" /></motion.div>
             <motion.div variants={itemVariants}><PlatformBadge icon={<IconLinux />} name="Debian / Ubuntu" manager="via APT (apt)" /></motion.div>
